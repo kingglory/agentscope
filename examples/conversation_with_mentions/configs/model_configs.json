@@ -1,5 +1,11 @@
 [
     {
+        "model_type": "dashscope_chat",
+        "config_name": "dashscope_chat-temperature-0.1",
+        "model_name": "qwen-max",
+        "api_key": "sk-07b0bbfd2***5da8da05f6f"
+    },
+    {
         "model_type": "openai_chat",
         "config_name": "gpt-4",
         "model_name": "gpt-4",
