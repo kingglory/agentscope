@@ -5,6 +5,10 @@ This agent can execute code interactively as actions.
 More details can be found at the paper of CodeAct agent
 https://arxiv.org/abs/2402.01030
 and the original repo of codeact https://github.com/xingyaoww/code-act
+一个实现了CodeAct代理的代理类。
+该代理可以交互式地执行代码作为动作。
+更多细节可以在CodeAct代理的论文
+https://arxiv.org/abs/2402.01030
 """
 from agentscope.agents import AgentBase
 from agentscope.message import Msg
@@ -24,13 +28,31 @@ Your response should be concise, but do express their thoughts. Always write the
 You should not ask for the user's input unless necessary. Solve the task on your own and leave no unanswered questions behind.
 You should do every thing by your self.
 """  # noqa
-
+# 系统消息
+# SYSTEM_MESSAGE = """
+# 你是一个乐于助人的助手，会给出对用户问题的详细、礼貌的回答。
+# 你应该与交互式的Python（Jupyter Notebook）环境进行交互，并在需要时接收相应的输出。
+# 助手编写的代码应使用<execute>标签括起来，例如：<execute> print('Hello World!') </execute>。
+# 你应该每次都尽量少做一些事情，而不是在一个<execute>块中放太多代码。
+# 你可以通过<execute> !pip install [所需包] </execute>安装包，并且在开始使用之前始终导入包并定义变量。
+# 当已经从执行结果中获得答案时，你应该停止<execute>并提供答案。
+# 尽可能地为用户执行代码，而不是提供代码。
+# 你的回答应尽量简明扼要，但也要表达出用户的想法。
+# 你应该在必要时才询问用户的输入。独立解决问题，不留未解答的问题。
+# 你应该独立完成所有任务。
+# """
 EXAMPLE_MESSAGE = """
 Additionally, you are provided with the following code available:
 {example_code}
 The above code is already available in your interactive Python (Jupyter Notebook) environment, allowing you to directly use these variables and functions without needing to redeclare them.
 """  # noqa
 
+# 示例代码消息
+# EXAMPLE_MESSAGE = """
+# 此外，你还可以使用以下代码：
+# {example_code}
+# 上述代码已经在你的交互式Python（Jupyter Notebook）环境中可用，允许你直接使用这些变量和函数，而无需重新声明它们。
+# """
 
 class CodeActAgent(AgentBase):
     """
@@ -39,6 +61,13 @@ class CodeActAgent(AgentBase):
     More details can be found at the paper of codeact agent
     https://arxiv.org/abs/2402.01030
     and the original repo of codeact https://github.com/xingyaoww/code-act
+    """
+    """
+    CodeAct代理的实现。
+    该代理可以作为 动作 交互式地执行代码。
+    更多细节可以在CodeAct代理的论文
+    https://arxiv.org/abs/2402.01030
+    和原始的codeact仓库 https://github.com/xingyaoww/code-act 中找到
     """
 
     def __init__(
@@ -56,8 +85,7 @@ class CodeActAgent(AgentBase):
                 The name of the model configuration.
             example_code(Optional`str`):
                 The example code to be executed bewfore the interaction.
-                You can import reference libs, define variables
-                and functions to be called. For example:
+                You can import reference libs, define variables and functions to be called. For example:
 
                     ```python
                     from agentscope.service import bing_search
@@ -70,27 +98,59 @@ class CodeActAgent(AgentBase):
                     ```
 
         """  # noqa
+        """
+        初始化CodeActAgent。
+        参数:
+            name(str):
+                代理的名称。
+            model_config_name(str):
+                模型配置的名称。
+            example_code(str, 可选):
+                在交互前执行的示例代码。
+                你可以导入参考库，定义变量和函数。例如：
+
+                    ```python
+                    from agentscope.service import bing_search
+                    import os
+
+                    api_key = "{YOUR_BING_API_KEY}"
+
+                    def search(question: str):
+                        return bing_search(question, api_key=api_key, num_results=3).content
+                    ```
+        """
+
+        # 调用父类的初始化方法
         super().__init__(
             name=name,
             model_config_name=model_config_name,
         )
+        # 最大执行次数
         self.n_max_executions = 5
+        # 示例代码
         self.example_code = example_code
+        # 代码执行器
         self.code_executor = NoteBookExecutor()
 
+        # 系统消息
         sys_msg = Msg(name="system", role="system", content=SYSTEM_MESSAGE)
+        # 示例消息
         example_msg = Msg(
             name="user",
             role="user",
             content=EXAMPLE_MESSAGE.format(example_code=self.example_code),
         )
 
+        # 将系统消息添加到内存
         self.memory.add(sys_msg)
 
+        # 如果有示例代码，则执行并记录结果
         if self.example_code != "":
+            # 代码执行结果
             code_execution_result = self.code_executor.run_code_on_notebook(
                 self.example_code,
             )
+            # 代码执行消息
             code_exec_msg = self.handle_code_result(
                 code_execution_result,
                 "Example Code excuted: ",
@@ -99,6 +159,7 @@ class CodeActAgent(AgentBase):
             self.memory.add(code_exec_msg)
             self.speak(code_exec_msg)
 
+        # 解析器
         self.parser = RegexTaggedContentParser(try_parse_json=False)
 
     def handle_code_result(
@@ -107,6 +168,9 @@ class CodeActAgent(AgentBase):
         content_pre_sring: str = "",
     ) -> Msg:
         """return the message from code result"""
+        """
+        返回代码执行结果的消息
+        """
         code_exec_content = content_pre_sring
         if code_execution_result.status == ServiceExecStatus.SUCCESS:
             code_exec_content += "Excution Successful:\n"
@@ -119,16 +183,19 @@ class CodeActAgent(AgentBase):
 
     def reply(self, x: Msg = None) -> Msg:
         """The reply function that implements the codeact agent."""
-
+        """
+        实现codeact代理的回复函数。
+        """
         self.memory.add(x)
 
+        # 执行计数
         excution_count = 0
         while (
             self.memory.get_memory(1)[-1].role == "user"
-            and excution_count < self.n_max_executions
+            and excution_count < self.n_max_executions # 最大执行次数
         ):
             prompt = self.model.format(self.memory.get_memory())
-            model_res = self.model(prompt)
+            model_res = self.model(prompt) # 模型响应
             msg_res = Msg(
                 name=self.name,
                 content=model_res.text,

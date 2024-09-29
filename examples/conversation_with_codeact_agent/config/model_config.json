@@ -1,0 +1,33 @@
+[
+    {
+        "model_type": "dashscope_chat",
+        "config_name": "dashscope_qwen_max_chat-temperature-0.5",
+        "model_name": "qwen-max",
+        "api_key": "sk-07b0bbfd***8da05f6f",
+        "generate_args":{"temperature": 0.5}
+    },
+    {
+        "model_type": "dashscope_chat",
+        "config_name": "dashscope_qwen_turbo_chat-temperature-0.1",
+        "model_name": "qwen-turbo",
+        "api_key": "sk-07b0b***da8da05f6f",
+        "generate_args":{"temperature": 0.1}
+    },
+    {
+        "model_type": "openai_chat",
+        "config_name": "gpt-4",
+        "model_name": "gpt-4",
+        "api_key": "xxx",
+        "organization": "xxx",
+        "generate_args": {
+            "temperature": 0.5
+        }
+    },
+    {
+        "model_type": "post_api_chat",
+        "config_name": "my_post_api",
+        "api_url": "https://xxx",
+        "headers": {},
+        "json_args": {}
+    }
+]
